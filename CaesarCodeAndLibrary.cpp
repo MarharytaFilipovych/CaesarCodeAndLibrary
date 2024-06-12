@@ -1,20 +1,47 @@
-// CaesarCodeAndLibrary.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
+char* Encrypt(char* rawText, int key)
+{
+    int length = strlen(rawText);
+    char* encodedText = new char[length + 1];
+
+    for (int i = 0; i < length; i++)
+    {
+        if (!isalpha(rawText[i]))
+        {
+            encodedText[i] = rawText[i];
+        }
+        else if (isupper(rawText[i]))
+        {
+            encodedText[i] = ((rawText[i] - 65 + key) % 26 + 26) % 26 + 65;
+        }
+        else if (!isupper(rawText[i]))
+        {
+            encodedText[i] = ((rawText[i] - 97 + key) % 26 + 26) % 26 + 97;
+        }
+
+    }
+    encodedText[length] = '\0';
+    return encodedText;
+}
+
+char* Decrypt(char* encryptedText, int key)
+{
+    char* text = Encrypt(encryptedText, -key);
+    delete[] encryptedText;
+    return text;
+}
+
 
 #include <iostream>
 
 int main()
 {
     std::cout << "Hello World!\n";
+    char phrase[] = "Ab";
+    char* encryptedText = Encrypt(phrase, 1);
+    std::cout << encryptedText << std::endl;
+    char* text = Decrypt(encryptedText, 1);
+    std::cout << text << std::endl;
+
 }
 
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
 
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
