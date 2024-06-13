@@ -28,6 +28,17 @@ char* Encrypt(char* rawText, int key) {
 char* Decrypt(char* encryptedText, int key) {
     return Encrypt(encryptedText, -key);
 }
+void AskUserToEnterKey(int* key)
+{    cout << "Enter a key: " << endl;
+   
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    if (!(0 <= *key && *key <= 25))
+    {
+        cout << "Your key is not in the correct range!!! (it is from 0 to 25)" << endl;
+        return;
+
+    }
+}
 
 void help() {
     cout << "0 - exit\n"
@@ -37,6 +48,7 @@ void help() {
 }
 
 void ProcessCommand(int command) {
+    int key;
     switch (command) {
     case 0:
         exit(0);
@@ -45,10 +57,10 @@ void ProcessCommand(int command) {
         help();
         break;
     case 2:
-        // You can add the encrypt logic here
+        AskUserToEnterKey(&key);
         break;
     case 3:
-        // You can add the decrypt logic here
+        AskUserToEnterKey(&key);
         break;
     default:
         cout << "The command is not implemented! Type 1 for help!\n";
