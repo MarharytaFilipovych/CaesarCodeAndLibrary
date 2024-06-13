@@ -2,9 +2,53 @@
 #include <cctype>
 #include <cstring>
 #include <algorithm>
+#include <limits>
+
 #define INITIAL_SIZE 50
 
 using namespace std;
+
+typedef struct {
+    char* text;
+    size_t capacity;
+} arrayForUserInput;
+
+void CreateArrayForUserInput(arrayForUserInput* userInput) {
+    char* array = new char[INITIAL_SIZE];
+    if (array == nullptr) {
+        cout << "Memory allocation failed!" << endl;
+        exit(EXIT_FAILURE);
+    }
+    array[0] = '\0';
+    userInput->capacity = INITIAL_SIZE;
+    userInput->text = array;
+}
+
+void MakeUserArrayLonger(arrayForUserInput* userInput) {
+    size_t newCapacity = userInput->capacity * 2;
+    char* temp = new char[newCapacity];
+    if (temp == nullptr) {
+        cout << "Memory allocation failed!" << endl;
+        exit(EXIT_FAILURE);
+    }
+    copy_n(userInput->text, userInput->capacity, temp);
+    delete[] userInput->text;
+    userInput->text = temp;
+    userInput->capacity = newCapacity;
+}
+
+void TakeUserInput(arrayForUserInput* userInput) {
+    cout << "Enter text: " << endl;
+    size_t currentLength = strlen(userInput->text);
+    while (fgets(userInput->text + currentLength, userInput->capacity - currentLength, stdin)) {
+        currentLength += strlen(userInput->text + currentLength);
+        if (userInput->text[currentLength - 1] == '\n') {
+            break;
+        }
+        MakeUserArrayLonger(userInput);
+    }
+    userInput->text[currentLength - 1] = '\0';
+}
 
 char* Encrypt(char* rawText, int key) {
     int length = strlen(rawText);
@@ -28,16 +72,22 @@ char* Encrypt(char* rawText, int key) {
 char* Decrypt(char* encryptedText, int key) {
     return Encrypt(encryptedText, -key);
 }
-void AskUserToEnterKey(int* key)
-{    cout << "Enter a key: " << endl;
-   
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    if (!(0 <= *key && *key <= 25))
-    {
-        cout << "Your key is not in the correct range!!! (it is from 0 to 25)" << endl;
-        return;
 
+bool AskUserToEnterKey(int* key) {
+    cout << "Enter a key (0 to 25): " << endl;
+    if (!(cin >> *key)) {
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cout << "Invalid input!" << endl;
+        return false;
     }
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+    if (*key < 0 || *key > 25) {
+        cout << "Invalid range!" << endl;
+        return false;
+    }
+    return true;
 }
 
 void help() {
@@ -48,7 +98,11 @@ void help() {
 }
 
 void ProcessCommand(int command) {
+    arrayForUserInput userInput;
+    CreateArrayForUserInput(&userInput);
     int key;
+    char* result = nullptr;
+
     switch (command) {
     case 0:
         exit(0);
@@ -57,87 +111,44 @@ void ProcessCommand(int command) {
         help();
         break;
     case 2:
-        AskUserToEnterKey(&key);
+        TakeUserInput(&userInput);
+        if (AskUserToEnterKey(&key)) {
+            result = Encrypt(userInput.text, key);
+            cout << "Encrypted: " << result << endl;
+        }
         break;
     case 3:
-        AskUserToEnterKey(&key);
+        TakeUserInput(&userInput);
+        if (AskUserToEnterKey(&key)) {
+            result = Decrypt(userInput.text, key);
+            cout << "Decrypted: " << result << endl;
+        }
         break;
     default:
         cout << "The command is not implemented! Type 1 for help!\n";
     }
-}
-typedef struct {
-    char* text;
-    size_t capacity;
-} arrayForUserInput;
 
-void CreateArrayForUserInput(arrayForUserInput* userInput) {
-    char* array = new char[INITIAL_SIZE];
-    if (array == nullptr) {
-        cout << "Memory allocation failed!" << endl;
-        exit(EXIT_FAILURE);
+    if (userInput.text != nullptr) {
+        delete[] userInput.text;
     }
-    array[0] = '\0';
-    userInput->capacity = INITIAL_SIZE;
-    userInput->text = array;
 }
 
-void MakeUserArrayLonger(arrayForUserInput* userInput) {
-    size_t newCapacity = INITIAL_SIZE * 2;
-    char* temp = new char[newCapacity];
-    if (temp == nullptr) {
-        cout << "Memory allocation failed!" << endl;
-        exit(EXIT_FAILURE);
-    }
-    copy_n(userInput->text, INITIAL_SIZE, temp);
-    delete[] userInput->text;
-    userInput->text = temp;
-    userInput->capacity = newCapacity;
-}
-void AdjustSizeOfUserArray(arrayForUserInput* userInput)
-{
-    size_t newCapacity = strlen(userInput->text) + 1;
-    char* temp = new char[newCapacity];
-    if (temp == nullptr)
-    {
-        cout << "Memory allocation failed!" << endl;
-        exit(EXIT_FAILURE);
-    }
-    copy_n(userInput->text, newCapacity, temp);
-    delete[] userInput->text;
-    userInput->text = temp;
-    userInput->capacity = newCapacity;
-}
-void TakeUserInput(arrayForUserInput* userInput) {
-    size_t currentLength = strlen(userInput->text);
-    while (fgets(userInput->text + currentLength, INITIAL_SIZE - currentLength, stdin)) {
-        currentLength += strlen(userInput->text + currentLength);
-        if (userInput->text[currentLength - 1] == '\n') {
-            break;
-        }
-        MakeUserArrayLonger(userInput);
-    }
-    userInput->text[currentLength - 1] = '\0';
-}
 int main() {
     cout << "Hello! Welcome to the Text Editor! Enter '9' to see the available list of commands :)\n";
-    arrayForUserInput userInput;
-    CreateArrayForUserInput(&userInput);
     int command;
     do {
-        std::cout << "Enter command: ";
-        if (!(std::cin >> command)) {
-            std::cin.clear();
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        cout << "Enter command: ";
+        if (!(cin >> command)) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
             continue;
         }
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
         if (command == 0) {
             break;
         }
-        
+
         ProcessCommand(command);
     } while (true);
     return 0;
 }
-
