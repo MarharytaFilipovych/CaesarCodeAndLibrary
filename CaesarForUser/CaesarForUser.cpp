@@ -1,9 +1,11 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include <iostream>
 #include <cctype>
 #include <cstring>
 #include <algorithm>
 #include <limits>
-
+#include <Windows.h>
+#undef max
 #define INITIAL_SIZE 50
 
 using namespace std;
@@ -31,7 +33,7 @@ void MakeUserArrayLonger(arrayForUserInput* userInput) {
         cout << "Memory allocation failed!" << endl;
         exit(EXIT_FAILURE);
     }
-    copy_n(userInput->text, userInput->capacity, temp);
+    strncpy(temp, userInput->text, userInput->capacity);
     delete[] userInput->text;
     userInput->text = temp;
     userInput->capacity = newCapacity;
@@ -48,29 +50,6 @@ void TakeUserInput(arrayForUserInput* userInput) {
         MakeUserArrayLonger(userInput);
     }
     userInput->text[currentLength - 1] = '\0';
-}
-
-char* Encrypt(char* rawText, int key) {
-    int length = strlen(rawText);
-    char* encodedText = new char[length + 1];
-
-    for (int i = 0; i < length; i++) {
-        if (!isalpha(rawText[i])) {
-            encodedText[i] = rawText[i];
-        }
-        else if (isupper(rawText[i])) {
-            encodedText[i] = ((rawText[i] - 65 + key) % 26 + 26) % 26 + 65;
-        }
-        else {
-            encodedText[i] = ((rawText[i] - 97 + key) % 26 + 26) % 26 + 97;
-        }
-    }
-    encodedText[length] = '\0';
-    return encodedText;
-}
-
-char* Decrypt(char* encryptedText, int key) {
-    return Encrypt(encryptedText, -key);
 }
 
 bool AskUserToEnterKey(int* key) {
@@ -97,7 +76,7 @@ void help() {
         << "3 - decrypt\n";
 }
 
-void ProcessCommand(int command) {
+void ProcessCommand(int command, char* (*encrypt_ptr)(char*, int), char* (*decrypt_ptr)(char*, int)) {
     arrayForUserInput userInput;
     CreateArrayForUserInput(&userInput);
     int key;
@@ -112,17 +91,27 @@ void ProcessCommand(int command) {
         break;
     case 2:
         TakeUserInput(&userInput);
-        if (AskUserToEnterKey(&key)) {
-            result = Encrypt(userInput.text, key);
-            cout << "Encrypted: " << result << endl;
+        if (!AskUserToEnterKey(&key)) {
+            return;
         }
+        result = encrypt_ptr(userInput.text, key);
+        if (result == nullptr) {
+            return;
+        }
+        cout << "Encrypted: " << result << endl;
+        delete[] result;       
         break;
     case 3:
         TakeUserInput(&userInput);
-        if (AskUserToEnterKey(&key)) {
-            result = Decrypt(userInput.text, key);
-            cout << "Decrypted: " << result << endl;
+        if (!AskUserToEnterKey(&key)) {
+            return;
         }
+         result = decrypt_ptr(userInput.text, key);
+         if (result == nullptr) {
+             return;
+         }
+         cout << "Decrypted: " << result << endl;
+         delete[] result;
         break;
     default:
         cout << "The command is not implemented! Type 1 for help!\n";
@@ -134,7 +123,30 @@ void ProcessCommand(int command) {
 }
 
 int main() {
-    cout << "Hello! Welcome to the Text Editor! Enter '9' to see the available list of commands :)\n";
+    typedef char* (*encrypt_ptr_t)(char*, int);
+    typedef char* (*decrypt_ptr_t)(char*, int);
+
+    HINSTANCE handle = LoadLibrary(TEXT("C:\\Margo\\CaesarCodeAndLibrary\\Library\\Ceasar.dll"));
+    cout << "Hello! Enter '1' to see the available list of commands :)\n";
+    if (handle == nullptr || handle == INVALID_HANDLE_VALUE) {
+        cout << "Library not found." << endl;
+        return -1;
+    }
+
+    encrypt_ptr_t encrypt_ptr = (encrypt_ptr_t)GetProcAddress(handle, "Encrypt");
+    if (encrypt_ptr == nullptr) {
+        cout << "Encrypt function not found." << endl;
+        FreeLibrary(handle);
+        return 1;
+    }
+
+    decrypt_ptr_t decrypt_ptr = (decrypt_ptr_t)GetProcAddress(handle, "Decrypt");
+    if (decrypt_ptr == nullptr) {
+        cout << "Decrypt function not found." << endl;
+        FreeLibrary(handle);
+        return 1;
+    }
+
     int command;
     do {
         cout << "Enter command: ";
@@ -148,7 +160,9 @@ int main() {
             break;
         }
 
-        ProcessCommand(command);
+        ProcessCommand(command, encrypt_ptr, decrypt_ptr);
     } while (true);
+
+    FreeLibrary(handle);
     return 0;
 }

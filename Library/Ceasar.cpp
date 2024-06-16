@@ -31,7 +31,6 @@ extern "C"
     _declspec(dllexport) char* Decrypt(char* encryptedText, int key)
     {
         char* text = Encrypt(encryptedText, -key);
-        delete[] encryptedText;
         return text;
     }
 }
