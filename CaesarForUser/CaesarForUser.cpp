@@ -126,7 +126,7 @@ int main() {
     typedef char* (*encrypt_ptr_t)(char*, int);
     typedef char* (*decrypt_ptr_t)(char*, int);
 
-    HINSTANCE handle = LoadLibrary(TEXT("C:\\Margo\\CaesarCodeAndLibrary\\Library\\Ceasar.dll"));
+    HINSTANCE handle = LoadLibrary(TEXT("C:\\Margo\\CaesarCodeAndLibrary\\Library\\Caesar.dll"));
     cout << "Hello! Enter '1' to see the available list of commands :)\n";
     if (handle == nullptr || handle == INVALID_HANDLE_VALUE) {
         cout << "Library not found." << endl;
