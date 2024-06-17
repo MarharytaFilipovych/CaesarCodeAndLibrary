@@ -27,3 +27,4 @@ I have created a header file mylibrary.h, a source file mylibrary.cpp.
 ![Creating a static library](https://github.com/MarharytaFilipovych/CaesarCodeAndLibrary/blob/master/Pictures/creating%20mylibrary.lib.png)
 ![Linking with a test program](https://github.com/MarharytaFilipovych/CaesarCodeAndLibrary/blob/master/Pictures/linking%20main.cpp%20with%20static%20lib.png)
 ![Launching main.exe](https://github.com/MarharytaFilipovych/CaesarCodeAndLibrary/blob/master/Pictures/launching%20main.exe%203.png)
+
